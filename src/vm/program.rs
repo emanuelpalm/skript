@@ -10,6 +10,10 @@ impl<'a> Program<'a>  {
         Self { code, pc: 0 }
     }
 
+    pub fn pc(&self) -> usize {
+        self.pc
+    }
+
     pub fn read(&self) -> u8 {
         if self.pc >= self.code.len() {
             return opcode::HALT;

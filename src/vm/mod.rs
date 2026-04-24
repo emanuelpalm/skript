@@ -70,7 +70,10 @@ impl<'a> VirtualMachine<'a> {
                 self.program.step();
                 self.stack.push(value)?;
             }
-            _ => panic!("Unsupported opcode {}", op),
+            _ => return Err(Error::InvalidOpcode {
+                opcode: op,
+                pc: self.program.pc(),
+            }),
         }
         Ok(())
     }
@@ -100,5 +103,11 @@ mod tests {
 
         let res = vm.run();
         assert_eq!(res, Ok(12.0));
+    }
+
+    #[test]
+    fn produces_error_when_encountering_invalid_opcode() {
+        let mut vm = VirtualMachine::new(&[0xFF]);
+        assert_eq!(vm.run(), Err(Error::InvalidOpcode { opcode: 0xFF, pc: 0}));
     }
 }
