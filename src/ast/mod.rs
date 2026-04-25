@@ -1,6 +1,6 @@
 mod binop;
 mod node;
-mod lexer;
+mod text;
 
 pub use binop::*;
 pub use node::*;
