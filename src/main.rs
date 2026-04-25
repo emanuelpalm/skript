@@ -1,3 +1,5 @@
+mod ast;
+mod codegen;
 mod vm;
 
 fn main() {

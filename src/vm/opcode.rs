@@ -12,3 +12,4 @@ pub const DIV: u8 = 0x14;
 // Memory operations
 
 pub const PUSH_I8: u8 = 0x41;
+pub const PUSH_F64: u8 = 0x42;

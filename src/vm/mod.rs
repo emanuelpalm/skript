@@ -1,11 +1,13 @@
-mod opcode;
+pub mod opcode;
+
+mod error;
 mod program;
 mod stack;
-mod error;
+
+pub use error::*;
 
 use program::Program;
 use stack::Stack;
-use crate::vm::error::Error;
 
 pub struct VirtualMachine<'a> {
     program: Program<'a>,
@@ -31,49 +33,52 @@ impl<'a> VirtualMachine<'a> {
     }
 
     pub fn step(&mut self) -> Result<(), Error> {
-        let op = self.program.read();
+        let op = self.program.read_u8()?;
+        self.program.step();
         match op {
             opcode::HALT => {
                 self.running = false;
-            },
+            }
             opcode::ADD => {
                 let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
                 let res = lhs + rhs;
                 self.stack.push(res)?;
-                self.program.step();
-            },
+            }
             opcode::SUB => {
                 let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
                 let res = lhs - rhs;
                 self.stack.push(res)?;
-                self.program.step();
-            },
+            }
             opcode::MUL => {
                 let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
                 let res = lhs * rhs;
                 self.stack.push(res)?;
-                self.program.step();
-            },
+            }
             opcode::DIV => {
                 let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
                 let res = lhs / rhs;
                 self.stack.push(res)?;
-                self.program.step();
-            },
+            }
             opcode::PUSH_I8 => {
+                let value = self.program.read_i8()?;
                 self.program.step();
-                let value = self.program.read() as i8 as f64;
-                self.program.step();
+                self.stack.push(value as f64)?;
+            }
+            opcode::PUSH_F64 => {
+                let value = self.program.read_f64()?;
+                self.program.step_n(8);
                 self.stack.push(value)?;
             }
-            _ => return Err(Error::InvalidOpcode {
-                opcode: op,
-                pc: self.program.pc(),
-            }),
+            _ => {
+                return Err(Error::InvalidOpcode {
+                    opcode: op,
+                    pc: self.program.pc() - 1,
+                });
+            }
         }
         Ok(())
     }
@@ -87,27 +92,47 @@ mod tests {
     fn computes_simple_arithmetic_program_correctly() {
         // (((5 + 4) - 3) * 2) / 1
         let mut vm = VirtualMachine::new(&[
-            opcode::PUSH_I8, 5,
-            opcode::PUSH_I8, 4,
+            opcode::PUSH_I8,
+            5,
+            opcode::PUSH_I8,
+            4,
             opcode::ADD,
-
-            opcode::PUSH_I8, 3,
+            opcode::PUSH_I8,
+            3,
             opcode::SUB,
-
-            opcode::PUSH_I8, 2,
+            opcode::PUSH_I8,
+            2,
             opcode::MUL,
-
-            opcode::PUSH_I8, 1,
+            opcode::PUSH_I8,
+            1,
             opcode::DIV,
+            opcode::HALT,
         ]);
-
         let res = vm.run();
         assert_eq!(res, Ok(12.0));
     }
 
     #[test]
+    fn computes_push_f64_correctly() {
+        let v = 1.2e34f64.to_ne_bytes();
+        let code = [
+            opcode::PUSH_F64,
+            v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7],
+            opcode::HALT
+        ];
+        let mut vm = VirtualMachine::new(&code);
+        assert_eq!(vm.run(), Ok(1.2e34));
+    }
+
+    #[test]
     fn produces_error_when_encountering_invalid_opcode() {
         let mut vm = VirtualMachine::new(&[0xFF]);
-        assert_eq!(vm.run(), Err(Error::InvalidOpcode { opcode: 0xFF, pc: 0}));
+        assert_eq!(
+            vm.run(),
+            Err(Error::InvalidOpcode {
+                opcode: 0xFF,
+                pc: 0
+            })
+        );
     }
 }
