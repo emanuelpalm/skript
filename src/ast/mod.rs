@@ -1,8 +1,6 @@
 mod binop;
+mod node;
+mod lexer;
 
 pub use binop::*;
-
-pub enum Node {
-    BinaryOperator(BinaryOperator),
-    Value(f64),
-}
+pub use node::*;
