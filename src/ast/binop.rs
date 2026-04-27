@@ -1,5 +1,6 @@
 use crate::ast::Node;
 
+#[derive(Debug, PartialEq)]
 pub struct BinaryOperator {
     code: BinaryOperatorCode,
     left: Box<Node>,
@@ -24,7 +25,7 @@ impl BinaryOperator {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum BinaryOperatorCode {
     Add,
     Sub,

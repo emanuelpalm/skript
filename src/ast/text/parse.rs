@@ -16,16 +16,11 @@ fn parse_factor(parser: &mut Parser) -> Result<Node, Error> {
     let mut left = parse_term(parser)?;
     loop {
         let code = match parser.peek() {
-            Some(Token::Asterisk) => {
-                parser.skip1();
-                BinaryOperatorCode::Mul
-            }
-            Some(Token::Slash) => {
-                parser.skip1();
-                BinaryOperatorCode::Div
-            }
+            Some(Token::Asterisk) => BinaryOperatorCode::Mul,
+            Some(Token::Slash) => BinaryOperatorCode::Div,
             _ => return Ok(left),
         };
+        parser.skip1();
         let right = parse_term(parser)?;
         left = Node::BinaryOperator(BinaryOperator::new(code, left.into(), right.into()));
     }
@@ -35,25 +30,19 @@ fn parse_term(parser: &mut Parser) -> Result<Node, Error> {
     let mut left = parse_primary(parser)?;
     loop {
         let code = match parser.peek() {
-            Some(Token::Plus) => {
-                parser.skip1();
-                BinaryOperatorCode::Add
-            }
-            Some(Token::Dash) => {
-                parser.skip1();
-                BinaryOperatorCode::Sub
-            }
+            Some(Token::Plus) => BinaryOperatorCode::Add,
+            Some(Token::Dash) => BinaryOperatorCode::Sub,
             _ => return Ok(left),
         };
+        parser.skip1();
         let right = parse_primary(parser)?;
         left = Node::BinaryOperator(BinaryOperator::new(code, left.into(), right.into()));
     }
 }
 
 fn parse_primary(parser: &mut Parser) -> Result<Node, Error> {
-    match parser.peek() {
+    match parser.next() {
         Some(Token::ParenthesisLeft) => {
-            parser.skip1();
             let node = parse_node(parser)?;
             match parser.next() {
                 Some(Token::ParenthesisRight) => Ok(node),
@@ -63,5 +52,24 @@ fn parse_primary(parser: &mut Parser) -> Result<Node, Error> {
         Some(Token::Number(value)) => Ok(Node::Value(*value)),
         Some(token) => Err(Error::UnexpectedToken(*token)),
         None => Err(Error::UnexpectedEnd),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn produces_correct_ast_from_source() {
+        let source = "12 + (3 / 4)";
+        let result = parse(source.as_bytes());
+        assert_eq!(result, Ok(Node::BinaryOperator(BinaryOperator::new(
+            BinaryOperatorCode::Add,
+            Node::Value(12.0).into(),
+            Node::BinaryOperator(BinaryOperator::new(
+                BinaryOperatorCode::Div,
+                Node::Value(3.0).into(),
+                Node::Value(4.0).into(),
+            )).into()))));
     }
 }
