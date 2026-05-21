@@ -1,11 +1,11 @@
 use crate::ast::{BinaryOperator, BinaryOperatorCode, Node};
-use crate::vm::opcode;
+use crate::vm::{opcode, Code};
 
-pub fn generate(tree: Node) -> Vec<u8> {
+pub fn generate(tree: Node) -> Code {
     let mut output = Vec::new();
     generate_node(&tree, &mut output);
     output.push(opcode::HALT);
-    output
+    Code::new(output)
 }
 
 fn generate_node(node: &Node, output: &mut Vec<u8>) {
@@ -50,14 +50,14 @@ mod tests {
         ).into());
 
         let code = generate(ast);
-        assert_eq!(code, vec![
+        assert_eq!(code, Code::new([
             opcode::PUSH_I8,
             2,
             opcode::PUSH_I8,
             1,
             opcode::ADD,
             opcode::HALT,
-        ]);
+        ]));
     }
 
     #[test]
@@ -71,10 +71,10 @@ mod tests {
                 Node::Value(4.0).into(),
                 Node::Value(5.0).into(),
             )).into()
-        ).into());
+        ));
 
         let code = generate(ast);
-        assert_eq!(code, vec![
+        assert_eq!(code, Code::new([
             opcode::PUSH_I8,
             5,
             opcode::PUSH_I8,
@@ -84,6 +84,48 @@ mod tests {
             100,
             opcode::ADD,
             opcode::HALT,
-        ]);
+        ]));
+    }
+
+
+    #[test]
+    fn generates_nested_binary_operators_correctly() {
+        // (((5 + 4) - 3) * 2) / 1
+        let ast = Node::BinaryOperator(BinaryOperator::new(
+            BinaryOperatorCode::Div,
+            Node::BinaryOperator(BinaryOperator::new(
+                BinaryOperatorCode::Mul,
+                Node::BinaryOperator(BinaryOperator::new(
+                    BinaryOperatorCode::Sub,
+                    Node::BinaryOperator(BinaryOperator::new(
+                        BinaryOperatorCode::Add,
+                        Node::Value(5.0).into(),
+                        Node::Value(4.0).into()
+                    )).into(),
+                    Node::Value(3.0).into()
+                )).into(),
+                Node::Value(2.0).into()
+            )).into(),
+            Node::Value(1.0).into(),
+        ));
+
+        let code = generate(ast);
+        assert_eq!(code, Code::new([
+            opcode::PUSH_I8,
+            1,
+            opcode::PUSH_I8,
+            2,
+            opcode::PUSH_I8,
+            3,
+            opcode::PUSH_I8,
+            4,
+            opcode::PUSH_I8,
+            5,
+            opcode::ADD,
+            opcode::SUB,
+            opcode::MUL,
+            opcode::DIV,
+            opcode::HALT,
+        ]));
     }
 }

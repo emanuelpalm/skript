@@ -4,3 +4,4 @@ mod text;
 
 pub use binop::*;
 pub use node::*;
+pub use text::*;

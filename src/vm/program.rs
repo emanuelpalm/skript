@@ -1,4 +1,4 @@
-use crate::vm::{opcode, Error};
+use crate::vm::Error;
 
 pub struct Program<'a> {
     code: &'a [u8],

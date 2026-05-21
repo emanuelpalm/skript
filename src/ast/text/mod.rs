@@ -6,6 +6,7 @@ mod tokenize;
 mod parse;
 
 pub use error::*;
+pub use parse::*;
 pub use parser::*;
 pub use scanner::*;
 pub use token::*;

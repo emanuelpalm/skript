@@ -1,9 +1,11 @@
 pub mod opcode;
 
+mod code;
 mod error;
 mod program;
 mod stack;
 
+pub use code::*;
 pub use error::*;
 
 use program::Program;
@@ -40,26 +42,26 @@ impl<'a> VirtualMachine<'a> {
                 self.running = false;
             }
             opcode::ADD => {
-                let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
+                let rhs = self.stack.pop()?;
                 let res = lhs + rhs;
                 self.stack.push(res)?;
             }
             opcode::SUB => {
-                let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
+                let rhs = self.stack.pop()?;
                 let res = lhs - rhs;
                 self.stack.push(res)?;
             }
             opcode::MUL => {
-                let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
+                let rhs = self.stack.pop()?;
                 let res = lhs * rhs;
                 self.stack.push(res)?;
             }
             opcode::DIV => {
-                let rhs = self.stack.pop()?;
                 let lhs = self.stack.pop()?;
+                let rhs = self.stack.pop()?;
                 let res = lhs / rhs;
                 self.stack.push(res)?;
             }
@@ -93,23 +95,41 @@ mod tests {
         // (((5 + 4) - 3) * 2) / 1
         let mut vm = VirtualMachine::new(&[
             opcode::PUSH_I8,
-            5,
-            opcode::PUSH_I8,
-            4,
-            opcode::ADD,
-            opcode::PUSH_I8,
-            3,
-            opcode::SUB,
+            1,
             opcode::PUSH_I8,
             2,
-            opcode::MUL,
             opcode::PUSH_I8,
-            1,
+            3,
+            opcode::PUSH_I8,
+            4,
+            opcode::PUSH_I8,
+            5,
+            opcode::ADD,
+            opcode::SUB,
+            opcode::MUL,
             opcode::DIV,
             opcode::HALT,
         ]);
         let res = vm.run();
         assert_eq!(res, Ok(12.0));
+    }
+
+    #[test]
+    fn x() {
+        // 100 + 4 * 5
+        let mut vm = VirtualMachine::new(&[
+            opcode::PUSH_I8,
+            5,
+            opcode::PUSH_I8,
+            4,
+            opcode::MUL,
+            opcode::PUSH_I8,
+            100,
+            opcode::ADD,
+            opcode::HALT,
+        ]);
+        let res = vm.run();
+        assert_eq!(res, Ok(120.0));
     }
 
     #[test]

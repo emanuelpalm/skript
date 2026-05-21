@@ -31,7 +31,7 @@ pub struct MatchSet<const F: usize> {
 }
 
 pub fn parse<const F: usize>(
-    pattern: &PatternSet<F>,
+    ps: &PatternSet<F>,
     mut args: impl Iterator<Item = String>,
 ) -> MatchSet<F> {
     let mut match_set = MatchSet::<F> {
@@ -52,7 +52,7 @@ pub fn parse<const F: usize>(
         }
 
         for i in 0..F {
-            let flag = &pattern.flags[i];
+            let flag = &ps.flags[i];
             if matches(flag, &arg) {
                 match_set.flags[i] = match flag.kind {
                     FlagKind::Toggle => FlagValue::Toggled,
@@ -76,15 +76,15 @@ pub fn parse<const F: usize>(
     }
 }
 
-pub fn print<const F: usize, W: fmt::Write>(cmd: &PatternSet<F>, mut w: W) -> fmt::Result {
-    writeln!(w, "{}", cmd.description)?;
+pub fn write<const F: usize, W: fmt::Write>(ps: &PatternSet<F>, mut w: W) -> fmt::Result {
+    writeln!(w, "{}", ps.description)?;
 
-    if !cmd.flags.is_empty() {
+    if !ps.flags.is_empty() {
         writeln!(w)?;
         writeln!(w, "Options:")?;
     }
     for i in 0..F {
-        let flag = &cmd.flags[i];
+        let flag = &ps.flags[i];
         w.write_str("  ")?;
         if let Some(short) = flag.short {
             w.write_char('-')?;

@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
     EndOfProgram,
@@ -7,4 +9,10 @@ pub enum Error {
     },
     StackOverflow,
     StackUnderflow,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
