@@ -1,4 +1,4 @@
-use crate::rvm::error::Error;
+use super::Error;
 
 const STACK_CAPACITY: usize = 256;
 

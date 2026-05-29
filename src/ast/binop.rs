@@ -1,19 +1,20 @@
 use crate::ast::Node;
+use crate::ops::Binop;
 
 #[derive(Debug, PartialEq)]
 pub struct BinaryOperator {
-    code: BinaryOperatorCode,
+    binop: Binop,
     left: Box<Node>,
     right: Box<Node>,
 }
 
 impl BinaryOperator {
-    pub fn new(code: BinaryOperatorCode, left: Box<Node>, right: Box<Node>) -> BinaryOperator {
-        Self { code, left, right }
+    pub fn new(binop: Binop, left: Box<Node>, right: Box<Node>) -> BinaryOperator {
+        Self { binop, left, right }
     }
 
-    pub fn code(&self) -> BinaryOperatorCode {
-        self.code
+    pub fn binop(&self) -> Binop {
+        self.binop
     }
 
     pub fn left(&self) -> &Node {
@@ -23,12 +24,4 @@ impl BinaryOperator {
     pub fn right(&self) -> &Node {
         &self.right
     }
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum BinaryOperatorCode {
-    Add,
-    Sub,
-    Mul,
-    Div,
 }

@@ -1,5 +1,6 @@
-use crate::ast::{BinaryOperator, BinaryOperatorCode, Node};
+use crate::ast::{BinaryOperator, Node};
 use crate::ast::text::{tokenize, Error, Parser, Token};
+use crate::ops::Binop;
 
 pub fn parse(source: &[u8]) -> Result<Node, Error> {
     let tokens = tokenize(source)?;
@@ -16,8 +17,8 @@ fn parse_factor(parser: &mut Parser) -> Result<Node, Error> {
     let mut left = parse_term(parser)?;
     loop {
         let code = match parser.peek() {
-            Some(Token::Asterisk) => BinaryOperatorCode::Mul,
-            Some(Token::Slash) => BinaryOperatorCode::Div,
+            Some(Token::Asterisk) => Binop::Mul,
+            Some(Token::Slash) => Binop::Div,
             _ => return Ok(left),
         };
         parser.skip1();
@@ -30,8 +31,8 @@ fn parse_term(parser: &mut Parser) -> Result<Node, Error> {
     let mut left = parse_primary(parser)?;
     loop {
         let code = match parser.peek() {
-            Some(Token::Plus) => BinaryOperatorCode::Add,
-            Some(Token::Dash) => BinaryOperatorCode::Sub,
+            Some(Token::Plus) => Binop::Add,
+            Some(Token::Dash) => Binop::Sub,
             _ => return Ok(left),
         };
         parser.skip1();
@@ -57,6 +58,7 @@ fn parse_primary(parser: &mut Parser) -> Result<Node, Error> {
 
 #[cfg(test)]
 mod tests {
+    use crate::ops::Binop;
     use super::*;
 
     #[test]
@@ -64,10 +66,10 @@ mod tests {
         let source = "12 + (3 / 4)";
         let result = parse(source.as_bytes());
         assert_eq!(result, Ok(Node::BinaryOperator(BinaryOperator::new(
-            BinaryOperatorCode::Add,
+            Binop::Add,
             Node::Value(12.0).into(),
             Node::BinaryOperator(BinaryOperator::new(
-                BinaryOperatorCode::Div,
+                Binop::Div,
                 Node::Value(3.0).into(),
                 Node::Value(4.0).into(),
             )).into()))));

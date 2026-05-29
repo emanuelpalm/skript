@@ -1,5 +1,4 @@
-use crate::rvm::instr::Instr;
-use crate::rvm::{Code, Error};
+use super::{Error, Instr};
 
 pub struct Program<'a> {
     code: &'a [Instr],
