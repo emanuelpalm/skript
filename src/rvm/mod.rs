@@ -18,6 +18,7 @@ pub struct VirtualMachine<'a> {
     program: Program<'a>,
     running: bool,
     stack: Stack,
+    retval: Option<f64>,
 }
 
 impl<'a> VirtualMachine<'a> {
@@ -26,6 +27,7 @@ impl<'a> VirtualMachine<'a> {
             program: Program::new(code),
             running: false,
             stack: Stack::new(),
+            retval: None,
         }
     }
 
@@ -34,7 +36,7 @@ impl<'a> VirtualMachine<'a> {
         while self.running {
             self.step()?;
         }
-        self.stack.pop()
+        self.retval.ok_or(Error::NoReturnValue)
     }
 
     pub fn step(&mut self) -> Result<(), Error> {
@@ -49,10 +51,18 @@ impl<'a> VirtualMachine<'a> {
                 let bx = instr.bx_i32();
                 self.stack.set(ra as usize, bx as f64)?;
             }
+            OP_RET => {
+                let ra = instr.a();
+                let retval = self.stack.get(ra as usize)?;
+                self.retval = Some(retval);
+                self.running = false;
+            }
             OP_ADD => {
                 let ra = instr.a();
-                let b = self.stack.get(instr.b() as usize)?;
-                let c = self.stack.get(instr.c() as usize)?;
+                let rb = instr.b();
+                let rc = instr.c();
+                let b = self.stack.get(rb as usize)?;
+                let c = self.stack.get(rc as usize)?;
                 self.stack.set(ra as usize, b + c)?;
             }
             OP_SUB => {
@@ -101,7 +111,7 @@ mod tests {
             Instr::from_a_b_c(OP_SUB, 5, 5, 2),
             Instr::from_a_b_c(OP_MUL, 5, 5, 1),
             Instr::from_a_b_c(OP_DIV, 5, 5, 0),
-            Instr::new(OP_HALT as u32),
+            Instr::from_a_b_c(OP_RET, 5, 0, 0),
         ];
         let mut vm = VirtualMachine::new(&code);
         let res = vm.run();
@@ -115,7 +125,7 @@ mod tests {
         assert_eq!(
             vm.run(),
             Err(Error::InvalidOpcode {
-                opcode: 0xFF,
+                opcode: 0x3F,
                 pc: 0
             })
         );

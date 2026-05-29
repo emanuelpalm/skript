@@ -5,7 +5,7 @@ use std::{env, io, process};
 mod ast;
 mod cli;
 mod codegen;
-mod vm;
+mod rvm;
 mod hir;
 
 const ROOT_PATTERN: cli::PatternSet<2> = cli::PatternSet {
@@ -88,10 +88,13 @@ fn repl(args: &[String], flags: &[String]) -> Result<(), Box<dyn Error>> {
         }
 
         let tree = ast::parse(input.as_bytes())?;
-        let code = codegen::generate(tree);
+        let ir = ast::hir::lower(&tree);
+        let code = hir::rvm::lower(&ir);
 
-        let mut svm = vm::VirtualMachine::new(&code);
-        match svm.run() {
+        println!("{:?}", code);
+
+        let mut vm = rvm::VirtualMachine::new(&code);
+        match vm.run() {
             Ok(value) => writeln!(stdout, "{}", value),
             Err(ref error) => writeln!(stdout, "{}", error),
         }?;

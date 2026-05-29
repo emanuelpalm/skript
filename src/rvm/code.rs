@@ -1,5 +1,5 @@
 use std::{fmt, ops};
-use crate::vm::instr::Instr;
+use crate::rvm::instr::Instr;
 
 #[derive(Eq, PartialEq)]
 pub struct Code(Box<[Instr]>);

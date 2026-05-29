@@ -1,3 +1,5 @@
+pub mod hir;
+
 mod binop;
 mod node;
 mod text;

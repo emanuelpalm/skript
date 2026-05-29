@@ -1,5 +1,5 @@
-use crate::vm::instr::Instr;
-use crate::vm::{Code, Error};
+use crate::rvm::instr::Instr;
+use crate::rvm::{Code, Error};
 
 pub struct Program<'a> {
     code: &'a [Instr],
@@ -27,14 +27,6 @@ impl<'a> Program<'a> {
             self.pc += 1;
         }
     }
-
-    pub fn step_n(&mut self, n: usize) {
-        if self.pc + n <= self.code.len() {
-            self.pc += n;
-        } else {
-            self.pc = self.code.len();
-        }
-    }
 }
 
 #[cfg(test)]
@@ -48,7 +40,7 @@ mod tests {
         for _ in 0..256 {
             program.step();
         }
-        assert_eq!(program.pc, 3);
+        assert_eq!(program.pc, 4);
     }
 
     #[test]

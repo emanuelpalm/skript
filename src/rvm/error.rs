@@ -7,6 +7,7 @@ pub enum Error {
         opcode: u8,
         pc: usize,
     },
+    NoReturnValue,
     StackMissed,
     StackOverflow,
     StackUnderflow,

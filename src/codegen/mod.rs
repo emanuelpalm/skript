@@ -1,6 +1,7 @@
+/*
 use crate::ast::{BinaryOperator, BinaryOperatorCode, Node};
-use crate::vm::{Code, Instr};
-use crate::vm::opcode::*;
+use crate::rvm::{Code, Instr};
+use crate::rvm::opcode::*;
 
 pub fn generate(tree: Node) -> Code {
     let mut output = Vec::new();
@@ -129,4 +130,4 @@ mod tests {
             opcode::HALT,
         ]));
     }
-}
+}*/

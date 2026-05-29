@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::vm::opcode::*;
+use crate::rvm::opcode::*;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Instr(u32);
@@ -13,8 +13,12 @@ impl Instr {
         Instr(((opcode as u32) << 26) | ((a as u32) << 18) | (bx & 0x0003_FFFF))
     }
 
+    pub fn from_a_bx_i32(opcode: u8, a: u8, bx: i32) -> Self {
+        Self::from_a_bx(opcode, a, bx as u32)
+    }
+
     pub fn from_a_b_c(opcode: u8, a: u8, b: u8, c: u8) -> Self {
-        Instr(((opcode as u32) << 26) | ((a as u32) << 18) | ((b as u32) << 12) | ((c as u32) << 2))
+        Instr(((opcode as u32) << 26) | ((a as u32) << 18) | ((b as u32) << 10) | ((c as u32) << 2))
     }
 
     pub fn opcode(&self) -> u8 {
@@ -54,8 +58,9 @@ impl fmt::Debug for Instr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let op = self.opcode();
         match op {
-            OP_HALT => write!(f, "halt  exit({})", self.a()),
+            OP_HALT => write!(f, "halt   exit({})", self.a()),
             OP_LOAD_I => write!(f, "load_i R[{}] = {}", self.a(), self.bx_i32()),
+            OP_RET => write!(f, "ret    return(R[{}])", self.a()),
             OP_ADD => write!(f, "add    R[{}] := R[{}] + R[{}]", self.a(), self.b(), self.c()),
             OP_SUB => write!(f, "sub    R[{}] := R[{}] - R[{}]", self.a(), self.b(), self.c()),
             OP_MUL => write!(f, "mul    R[{}] := R[{}] * R[{}]", self.a(), self.b(), self.c()),
