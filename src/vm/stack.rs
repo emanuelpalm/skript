@@ -9,7 +9,17 @@ pub struct Stack {
 
 impl Stack {
     pub fn new() -> Self {
-        Self { buffer: [f64::NAN; _], top: 0 }
+        Self {
+            buffer: [f64::NAN; _],
+            top: 0,
+        }
+    }
+
+    pub fn get(&self, index: usize) -> Result<f64, Error> {
+        if index >= self.top {
+            return Err(Error::StackMissed);
+        }
+        Ok(self.buffer[index])
     }
 
     pub fn pop(&mut self) -> Result<f64, Error> {
@@ -29,6 +39,14 @@ impl Stack {
         } else {
             Err(Error::StackOverflow)
         }
+    }
+
+    pub fn set(&mut self, index: usize, value: f64) -> Result<(), Error> {
+        if index >= self.top {
+            return Err(Error::StackMissed);
+        }
+        self.buffer[index] = value;
+        Ok(())
     }
 }
 
@@ -73,8 +91,7 @@ mod tests {
     fn pushing_to_full_stack_produces_none() {
         let mut stack = Stack::new();
         for i in 0..STACK_CAPACITY {
-            stack.push(i as f64)
-                .expect("expected available capacity");
+            stack.push(i as f64).expect("expected available capacity");
         }
         assert_eq!(stack.push(256.0), Err(Error::StackOverflow));
     }

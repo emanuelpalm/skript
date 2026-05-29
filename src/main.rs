@@ -6,6 +6,7 @@ mod ast;
 mod cli;
 mod codegen;
 mod vm;
+mod hir;
 
 const ROOT_PATTERN: cli::PatternSet<2> = cli::PatternSet {
     description: "The skript language toolkit.\n\nUsage: skript [options] <command> [parameters]",

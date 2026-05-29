@@ -1,15 +1,17 @@
-// Special operations
+/// `HALT() -> (program exits)`
+pub const OP_HALT: u8 = 0x00;
 
-pub const HALT: u8 = 0x00;
+/// `LOAD_I(A, Bx) -> R[A] := ((Bx as i32) << 14) >> 14`
+pub const OP_LOAD_I: u8 = 0x01;
 
-// Arithmetic operations
+/// `ADD(A, B, C) -> R[A] := R[B] + R[C]`
+pub const OP_ADD: u8 = 0x20;
 
-pub const ADD: u8 = 0x11;
-pub const SUB: u8 = 0x12;
-pub const MUL: u8 = 0x13;
-pub const DIV: u8 = 0x14;
+/// `SUB(A, B, C) -> R[A] := R[B] - R[C]`
+pub const OP_SUB: u8 = 0x24;
 
-// Memory operations
+/// `MUL(A, B, C) -> R[A] := R[B] * R[C]`
+pub const OP_MUL: u8 = 0x28;
 
-pub const PUSH_I8: u8 = 0x41;
-pub const PUSH_F64: u8 = 0x42;
+/// `DIV(A, B, C) -> R[A] := R[B] / R[C]`
+pub const OP_DIV: u8 = 0x2C;

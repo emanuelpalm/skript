@@ -1,12 +1,13 @@
-use crate::vm::Error;
+use crate::vm::instr::Instr;
+use crate::vm::{Code, Error};
 
 pub struct Program<'a> {
-    code: &'a [u8],
+    code: &'a [Instr],
     pc: usize,
 }
 
-impl<'a> Program<'a>  {
-    pub fn new(code: &'a [u8]) -> Self {
+impl<'a> Program<'a> {
+    pub fn new(code: &'a [Instr]) -> Self {
         Self { code, pc: 0 }
     }
 
@@ -14,23 +15,11 @@ impl<'a> Program<'a>  {
         self.pc
     }
 
-    pub fn read_u8(&self) -> Result<u8, Error> {
+    pub fn read(&self) -> Result<Instr, Error> {
         if self.pc >= self.code.len() {
             return Err(Error::EndOfProgram);
         }
         Ok(self.code[self.pc])
-    }
-
-    pub fn read_i8(&self) -> Result<i8, Error> {
-        self.read_u8().map(|x| x as i8)
-    }
-
-    pub fn read_f64(&self) -> Result<f64, Error> {
-        let chunk: [u8; 8] = match &self.code[self.pc..self.pc + 8].try_into() {
-            Ok(chunk) => *chunk,
-            Err(_) => return Err(Error::EndOfProgram),
-        };
-        Ok(f64::from_ne_bytes(chunk))
     }
 
     pub fn step(&mut self) {
@@ -54,30 +43,32 @@ mod tests {
 
     #[test]
     fn pc_stops_at_end_of_program() {
-        let mut program = Program::new(&[0x01, 0x02, 0x03, 0xFF]);
+        let code = [Instr::new(1), Instr::new(2), Instr::new(3), Instr::new(255)];
+        let mut program = Program::new(&code);
         for _ in 0..256 {
             program.step();
         }
-        assert_eq!(program.pc, 4);
+        assert_eq!(program.pc, 3);
     }
 
     #[test]
     fn stepping_changes_read_output() {
-        let mut program = Program::new(&[0x01, 0x02, 0x03, 0xFF]);
-        assert_eq!(program.read_u8(), Ok(0x01));
-        assert_eq!(program.read_u8(), Ok(0x01));
+        let code = [Instr::new(1), Instr::new(2), Instr::new(3), Instr::new(255)];
+        let mut program = Program::new(&code);
+        assert_eq!(program.read(), Ok(Instr::new(0x01)));
+        assert_eq!(program.read(), Ok(Instr::new(0x01)));
 
         program.step();
-        assert_eq!(program.read_u8(), Ok(0x02));
+        assert_eq!(program.read(), Ok(Instr::new(0x02)));
 
         program.step();
-        assert_eq!(program.read_u8(), Ok(0x03));
+        assert_eq!(program.read(), Ok(Instr::new(0x03)));
 
         program.step();
-        assert_eq!(program.read_u8(), Ok(0xFF));
+        assert_eq!(program.read(), Ok(Instr::new(0xFF)));
 
         program.step();
-        assert_eq!(program.read_u8(), Err(Error::EndOfProgram));
-        assert_eq!(program.read_u8(), Err(Error::EndOfProgram));
+        assert_eq!(program.read(), Err(Error::EndOfProgram));
+        assert_eq!(program.read(), Err(Error::EndOfProgram));
     }
 }

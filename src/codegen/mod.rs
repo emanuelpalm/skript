@@ -1,21 +1,22 @@
 use crate::ast::{BinaryOperator, BinaryOperatorCode, Node};
-use crate::vm::{opcode, Code};
+use crate::vm::{Code, Instr};
+use crate::vm::opcode::*;
 
 pub fn generate(tree: Node) -> Code {
     let mut output = Vec::new();
     generate_node(&tree, &mut output);
-    output.push(opcode::HALT);
+    output.push(Instr::new(OP_HALT as u32));
     Code::new(output)
 }
 
-fn generate_node(node: &Node, output: &mut Vec<u8>) {
+fn generate_node(node: &Node, output: &mut Vec<Instr>) {
     match node {
         Node::BinaryOperator(operator) => generate_binary_operator(operator, output),
         Node::Value(value) => generate_value(*value, output),
     }
 }
 
-fn generate_binary_operator(binop: &BinaryOperator, output: &mut Vec<u8>) {
+fn generate_binary_operator(binop: &BinaryOperator, output: &mut Vec<Instr>) {
     generate_node(binop.right(), output);
     generate_node(binop.left(), output);
     match binop.code() {
@@ -26,12 +27,12 @@ fn generate_binary_operator(binop: &BinaryOperator, output: &mut Vec<u8>) {
     }
 }
 
-fn generate_value(value: f64, output: &mut Vec<u8>) {
+fn generate_value(value: f64, output: &mut Vec<Instr>) {
     if value >= i8::MIN as f64 && value <= i8::MAX as f64 && value.fract() == 0.0 {
-        output.push(opcode::PUSH_I8);
+        output.push(opcode::SET_S_I8);
         output.push(value as i8 as u8);
     } else {
-        output.push(opcode::PUSH_F64);
+        output.push(opcode::SET_S_F64);
         value.to_ne_bytes().iter().for_each(|&byte| output.push(byte));
     }
 }
@@ -51,9 +52,9 @@ mod tests {
 
         let code = generate(ast);
         assert_eq!(code, Code::new([
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             2,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             1,
             opcode::ADD,
             opcode::HALT,
@@ -75,12 +76,12 @@ mod tests {
 
         let code = generate(ast);
         assert_eq!(code, Code::new([
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             5,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             4,
             opcode::MUL,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             100,
             opcode::ADD,
             opcode::HALT,
@@ -111,15 +112,15 @@ mod tests {
 
         let code = generate(ast);
         assert_eq!(code, Code::new([
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             1,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             2,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             3,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             4,
-            opcode::PUSH_I8,
+            opcode::SET_S_I8,
             5,
             opcode::ADD,
             opcode::SUB,
