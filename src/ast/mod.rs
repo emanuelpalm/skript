@@ -1,9 +1,9 @@
 pub mod hir;
 
-mod binop;
-mod node;
+mod expr;
+mod stmt;
 mod text;
 
-pub use binop::*;
-pub use node::*;
+pub use expr::*;
+pub use stmt::*;
 pub use text::*;

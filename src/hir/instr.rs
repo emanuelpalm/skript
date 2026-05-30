@@ -8,7 +8,7 @@ pub enum Instr {
     },
 
     BinaryOperator {
-        kind: Binop,
+        binop: Binop,
         left: hir::Register,
         right: hir::Register,
         target: hir::Register,

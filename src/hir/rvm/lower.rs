@@ -16,7 +16,7 @@ fn lower_block(block: &hir::Block, acc: &mut Accumulator) {
                 acc.push(rvm::Instr::from_a_bx_i32(OP_LOAD_I, *target, *value as i32));
             }
 
-            hir::Instr::BinaryOperator { left, right, kind: operator, target } => {
+            hir::Instr::BinaryOperator { left, right, binop: operator, target } => {
                 let opcode = match operator {
                     Binop::Add => OP_ADD,
                     Binop::Sub => OP_SUB,
