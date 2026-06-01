@@ -15,7 +15,8 @@ pub fn lower_stmt(stmt: &ast::Stmt, acc: &mut Accumulator) {
             lower_expr(expr, acc);
         },
         ast::Stmt::Let { identifier, expr } => {
-            todo!()
+            let register = lower_expr(expr, acc);
+            acc.bind(register, identifier);
         }
         ast::Stmt::Return(expr) => {
             let source = lower_expr(expr, acc);
@@ -38,7 +39,7 @@ pub fn lower_expr(expr: &ast::Expr, acc: &mut Accumulator) -> hir::Register {
         }
 
         ast::Expr::Identifier(name) => {
-            todo!()
+            acc.lookup(name).unwrap_or_else(|| 255)
         }
 
         ast::Expr::Value(value) => {
