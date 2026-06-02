@@ -1,4 +1,5 @@
-use super::{Class, Span};
+use super::Class;
+use crate::txt::Span;
 use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

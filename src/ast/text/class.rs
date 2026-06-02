@@ -12,4 +12,5 @@ pub enum Class {
     Return,
     Semicolon,
     Slash,
+    Unknown,
 }

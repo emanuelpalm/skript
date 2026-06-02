@@ -4,9 +4,11 @@ use std::{env, io, process};
 
 mod ast;
 mod cli;
+mod dia;
 mod hir;
 mod ops;
 mod rvm;
+mod txt;
 
 const ROOT_PATTERN: cli::PatternSet<2> = cli::PatternSet {
     description: "The skript language toolkit.\n\nUsage: skript [options] <command> [parameters]",

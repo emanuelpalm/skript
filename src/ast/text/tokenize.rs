@@ -1,8 +1,7 @@
-use crate::ast::ErrorKind;
+use crate::txt::Scanner;
 use super::{Class, Token};
-use crate::ast::text::{Error, Scanner};
 
-pub fn tokenize(source: &[u8]) -> Result<Vec<Token>, Error> {
+pub fn tokenize(source: &[u8]) -> Vec<Token> {
     let mut scanner = Scanner::new(source);
 
     let mut tokens = Vec::new();
@@ -39,15 +38,14 @@ pub fn tokenize(source: &[u8]) -> Result<Vec<Token>, Error> {
             }
             Some(_) => {
                 scanner.skip_while(u8::is_ascii_graphic);
-                let span = scanner.get_marked_as_span();
-                return Err(Error::new(ErrorKind::InvalidToken, span));
+                Class::Unknown
             },
             None => break,
         };
         let token = Token::new(class, scanner.get_marked_as_span());
         tokens.push(token);
     }
-    Ok(tokens)
+    tokens
 }
 
 #[cfg(test)]
@@ -58,7 +56,7 @@ mod tests {
     fn produces_correct_tokens_from_source() {
         let source = "let digits = 12 + (3 / 4);";
         let result = tokenize(source.as_bytes());
-        assert_eq!(result, Ok(vec![
+        assert_eq!(result, vec![
             Token::new(Class::Let, 0..3),
             Token::new(Class::Identifier, 4..10),
             Token::new(Class::Equal, 11..12),
@@ -70,6 +68,6 @@ mod tests {
             Token::new(Class::Number, 23..24),
             Token::new(Class::ParenthesisRight, 24..25),
             Token::new(Class::Semicolon, 25..26),
-        ]));
+        ]);
     }
 }

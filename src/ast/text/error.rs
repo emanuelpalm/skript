@@ -1,5 +1,5 @@
-use super::Span;
 use std::{error, fmt};
+use crate::txt::Span;
 
 #[derive(Debug, PartialEq)]
 pub struct Error {

@@ -1,11 +1,11 @@
 use super::{Class, Error, ErrorKind, Token};
 
-pub struct Parser<'a> {
+pub struct TokenStream<'a> {
     tokens: &'a [Token],
     offset: u32,
 }
 
-impl<'a> Parser<'a> {
+impl<'a> TokenStream<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
         Self { tokens, offset: 0 }
     }

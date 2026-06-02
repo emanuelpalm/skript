@@ -1,4 +1,4 @@
-use crate::ast::Span;
+use super::Span;
 
 pub struct Scanner<'a> {
     source: &'a [u8],
