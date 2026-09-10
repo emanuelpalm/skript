@@ -49,8 +49,11 @@ impl<'a> Scanner<'a> {
 
     pub fn skip_u8(&mut self, v: u8) -> bool {
         match self.peek() {
-            Some(u) => v == u,
-            None => false,
+            Some(u) if v == u => {
+                self.skip1();
+                true
+            },
+            _ => false,
         }
     }
     

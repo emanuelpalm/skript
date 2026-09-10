@@ -32,6 +32,7 @@ impl error::Error for Error {}
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ErrorKind {
     ExpectedClosingParenthesis,
+    ExpectedCommaOrClosingParenthesisAfterFunctionParameter,
     ExpectedEqualAfterLetIdentifier,
     ExpectedIdentifierAfterLet,
     ExpectedSemicolonAfterStatement,
@@ -44,6 +45,7 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             ErrorKind::ExpectedClosingParenthesis => "expected closing parenthesis `)`",
+            ErrorKind::ExpectedCommaOrClosingParenthesisAfterFunctionParameter => "expected comma `,` or closing parenthesis `)` after function parameter",
             ErrorKind::ExpectedEqualAfterLetIdentifier => "expected equal `=` after `let` identifier",
             ErrorKind::ExpectedIdentifierAfterLet => "expected identifier after `let`",
             ErrorKind::ExpectedSemicolonAfterStatement => "expected semicolon `;` after statement",

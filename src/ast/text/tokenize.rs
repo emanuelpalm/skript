@@ -13,7 +13,12 @@ pub fn tokenize(source: &[u8]) -> Vec<Token> {
             Some(b')') => Class::ParenthesisRight,
             Some(b'*') => Class::Asterisk,
             Some(b'+') => Class::Plus,
-            Some(b'-') => Class::Dash,
+            Some(b',') => Class::Comma,
+            Some(b'-') => if scanner.skip_u8(b'>') {
+                Class::Arrow
+            } else {
+                Class::Dash
+            },
             Some(b'/') => Class::Slash,
             Some(b'0'..=b'9') => {
                 scanner.skip_while(u8::is_ascii_digit);
@@ -36,6 +41,8 @@ pub fn tokenize(source: &[u8]) -> Vec<Token> {
                     _ => Class::Identifier,
                 }
             }
+            Some(b'{') => Class::BraceLeft,
+            Some(b'}') => Class::BraceRight,
             Some(_) => {
                 scanner.skip_while(u8::is_ascii_graphic);
                 Class::Unknown
@@ -54,7 +61,7 @@ mod tests {
 
     #[test]
     fn produces_correct_tokens_from_source() {
-        let source = "let digits = 12 + (3 / 4);";
+        let source = "let digits = 12 + (3 / 4); () -> {};";
         let result = tokenize(source.as_bytes());
         assert_eq!(result, vec![
             Token::new(Class::Let, 0..3),
@@ -68,6 +75,12 @@ mod tests {
             Token::new(Class::Number, 23..24),
             Token::new(Class::ParenthesisRight, 24..25),
             Token::new(Class::Semicolon, 25..26),
+            Token::new(Class::ParenthesisLeft, 27..28),
+            Token::new(Class::ParenthesisRight, 28..29),
+            Token::new(Class::Arrow, 30..32),
+            Token::new(Class::BraceLeft, 33..34),
+            Token::new(Class::BraceRight, 34..35),
+            Token::new(Class::Semicolon, 35..36),
         ]);
     }
 }

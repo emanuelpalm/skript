@@ -16,12 +16,72 @@ pub fn parse(source: &[u8]) -> Result<Vec<Stmt>, Error> {
 fn parse_stmt(s: &[u8], t: &mut TokenStream) -> Result<Option<Stmt>, Error> {
     let stmt = match t.peek_class() {
         Some(Class::Let) => parse_stmt_let(s, t)?,
+        Some(Class::ParenthesisLeft) => parse_stmt_function_or_inner_expr(s, t)?,
         Some(Class::Return) => parse_stmt_return(s, t)?,
         Some(_) => parse_stmt_expr(s, t)?,
         None => return Ok(None),
     };
     t.expect_class_or(Class::Semicolon, ErrorKind::ExpectedSemicolonAfterStatement)?;
     Ok(Some(stmt))
+}
+
+fn parse_stmt_function_or_inner_expr(s: &[u8], t: &mut TokenStream) -> Result<Stmt, Error> {
+    let snapshot = t.snapshot();
+    t.skip1();
+
+    let mut parameters: Vec<String> = Vec::new();
+    loop {
+        let token = t.next()?;
+        match token.class() {
+            Class::Identifier => {
+                parameters.push(token.resolve_as_string(s));
+                match t.peek_class() {
+                    Some(Class::Comma) => {
+                        t.skip1();
+                        continue
+                    },
+                    Some(Class::ParenthesisRight) => {
+                        t.skip1();
+                        break
+                    },
+                    _ => {
+                        let span = t
+                            .peek()
+                            .map(|token| token.span())
+                            .unwrap_or(t.end());
+
+                        return Err(Error::new(
+                            ErrorKind::ExpectedCommaOrClosingParenthesisAfterFunctionParameter,
+                            span,
+                        ));
+                    }
+                }
+            }
+            Class::ParenthesisRight => break,
+            _ => {
+                t.restore(snapshot);
+                return parse_stmt_expr(s, t);
+            }
+        }
+    }
+
+    if !t.skip_class(Class::Arrow) || !t.skip_class(Class::BraceLeft) {
+        t.restore(snapshot);
+        return parse_stmt_expr(s, t);
+    }
+
+    let mut body: Vec<Stmt> = Vec::new();
+    loop {
+        if t.skip_class(Class::BraceRight) {
+            break;
+        }
+        match parse_stmt(s, t)? {
+            Some(stmt) => body.push(stmt),
+            None => return Err(Error::new(ErrorKind::UnexpectedEnd, t.end())),
+        }
+    }
+
+    Ok(Stmt::Function { parameters, body })
 }
 
 fn parse_stmt_let(s: &[u8], t: &mut TokenStream) -> Result<Stmt, Error> {
@@ -92,17 +152,19 @@ fn parse_primary(s: &[u8], t: &mut TokenStream) -> Result<Expr, Error> {
     match token.class() {
         Class::Identifier => Ok(Expr::Identifier(token.resolve_as_string(s))),
         Class::Number => Ok(Expr::Value(token.resolve_as_f64(s))),
-        Class::ParenthesisLeft => {
-            let expr = parse_expr(s, t)?;
-            match t.next()? {
-                token if token.class() == Class::ParenthesisRight => Ok(expr),
-                token => Err(Error::new(
-                    ErrorKind::ExpectedClosingParenthesis,
-                    token.span(),
-                )),
-            }
-        }
+        Class::ParenthesisLeft => parse_inner(s, t),
         _ => Err(Error::new(ErrorKind::UnexpectedToken, token.span())),
+    }
+}
+
+fn parse_inner(s: &[u8], t: &mut TokenStream) -> Result<Expr, Error> {
+    let expr = parse_expr(s, t)?;
+    match t.next()? {
+        token if token.class() == Class::ParenthesisRight => Ok(expr),
+        token => Err(Error::new(
+            ErrorKind::ExpectedClosingParenthesis,
+            token.span(),
+        )),
     }
 }
 
@@ -113,34 +175,37 @@ mod tests {
 
     #[test]
     fn produces_correct_ast_from_source() {
-        let source = "let digits = 12 + (3 / 4); digits - 1;";
+        let source = "(a, b) -> { let digits = a + (3 / 4); return digits - b; };";
         let result = parse(source.as_bytes());
         assert_eq!(
             result,
-            Ok(vec![
-                Stmt::Let {
-                    identifier: "digits".into(),
-                    expr: Expr::BinaryOperator {
-                        binop: Binop::Add,
-                        left: Expr::Value(12.0).into(),
-                        right: Expr::BinaryOperator {
-                            binop: Binop::Div,
-                            left: Expr::Value(3.0).into(),
-                            right: Expr::Value(4.0).into(),
+            Ok(vec![Stmt::Function {
+                parameters: vec!["a".into(), "b".into(),],
+                body: vec![
+                    Stmt::Let {
+                        identifier: "digits".into(),
+                        expr: Expr::BinaryOperator {
+                            binop: Binop::Add,
+                            left: Expr::Identifier("a".into()).into(),
+                            right: Expr::BinaryOperator {
+                                binop: Binop::Div,
+                                left: Expr::Value(3.0).into(),
+                                right: Expr::Value(4.0).into(),
+                            }
+                            .into()
+                        }
+                        .into(),
+                    },
+                    Stmt::Return(
+                        Expr::BinaryOperator {
+                            binop: Binop::Sub,
+                            left: Expr::Identifier("digits".into()).into(),
+                            right: Expr::Identifier("b".into()).into()
                         }
                         .into()
-                    }
-                    .into(),
-                },
-                Stmt::Expr(
-                    Expr::BinaryOperator {
-                        binop: Binop::Sub,
-                        left: Expr::Identifier("digits".into()).into(),
-                        right: Expr::Value(1.0).into()
-                    }
-                    .into()
-                ),
-            ])
+                    ),
+                ]
+            },])
         );
     }
 }

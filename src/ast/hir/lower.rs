@@ -14,6 +14,9 @@ pub fn lower_stmt(stmt: &ast::Stmt, acc: &mut Accumulator) {
         ast::Stmt::Expr(expr) => {
             lower_expr(expr, acc);
         },
+        ast::Stmt::Function { parameters, body } => {
+            todo!();
+        }
         ast::Stmt::Let { identifier, expr } => {
             let register = lower_expr(expr, acc);
             acc.bind(register, identifier);

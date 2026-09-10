@@ -1,6 +1,10 @@
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Class {
+    Arrow,
     Asterisk,
+    BraceLeft,
+    BraceRight,
+    Comma,
     Dash,
     Equal,
     Identifier,
